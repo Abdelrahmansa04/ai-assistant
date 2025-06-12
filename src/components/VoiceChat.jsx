@@ -4,8 +4,8 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import './VoiceChat.css';
 
-const WEBHOOK_URL = 'https://casillas.app.n8n.cloud/webhook/037cbcac-3c87-4055-a6d5-20c54f50a62d';
-const SOCKET_URL = 'http://192.168.8.105:5000';
+const WEBHOOK_URL = 'https://to7a3.app.n8n.cloud/webhook/f17e458d-9059-42c2-8d14-57acda06fc41';
+const SOCKET_URL = 'http://localhost:5000';
 
 const VoiceChat = ({ onSwitchMode }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -60,6 +60,8 @@ const VoiceChat = ({ onSwitchMode }) => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
+    
+    SpeechRecognition.stopListening();
 
     const utterance = new SpeechSynthesisUtterance(text);
     const englishVoice = voices.current.find(voice => 
@@ -75,9 +77,11 @@ const VoiceChat = ({ onSwitchMode }) => {
     utterance.onend = () => {
       setIsSpeaking(false);
       // Start listening again after AI finishes speaking
-      if (!listening && !isProcessing) {
-        SpeechRecognition.startListening({ continuous: true });
-      }
+      setTimeout(() => {
+        // if (!listening && !isProcessing) {
+          SpeechRecognition.startListening({ continuous: true });
+        // }
+      }, 2000);
     };
 
     speechSynthesis.speak(utterance);
@@ -114,7 +118,7 @@ const VoiceChat = ({ onSwitchMode }) => {
       addMessage('user', text);
       resetTranscript();
       
-      await axios.post(WEBHOOK_URL, { body: text }, {
+      await axios.post(WEBHOOK_URL, { message: text }, {
         headers: { 'Content-Type': 'application/json' }
       });
     } catch (error) {

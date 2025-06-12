@@ -486,6 +486,19 @@ textarea:disabled {
   opacity: 0.4 !important;
 }
 
+.selected-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+}
+
+.message-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  float: right;
+}
+
 /* History Modal */
 .history-modal {
   width: 90%;
@@ -648,6 +661,8 @@ textarea:disabled {
   justify-content: space-between;
   gap: 1rem;
 }
+
+
 
 .secondary-button {
   padding: 0.5rem 1rem;

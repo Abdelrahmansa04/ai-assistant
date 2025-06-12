@@ -5,8 +5,8 @@ import './VoiceToText.css';
 import io from 'socket.io-client';
 import VoiceChat from './VoiceChat';
 
-const WEBHOOK_URL = 'https://casillas.app.n8n.cloud/webhook/037cbcac-3c87-4055-a6d5-20c54f50a62d';
-const SOCKET_URL = 'http://192.168.8.105:5000';
+const WEBHOOK_URL = 'https://to7a3.app.n8n.cloud/webhook/f17e458d-9059-42c2-8d14-57acda06fc41';
+const SOCKET_URL = 'http://localhost:5000';
 
 const VoiceToText = () => {
   const [inputText, setInputText] = useState('');
@@ -19,6 +19,12 @@ const VoiceToText = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [mode, setMode] = useState('text'); // 'text' or 'voice'
   const speechSynthesis = window.speechSynthesis;
+
+  const [chatImages, setChatImages] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
   const voices = useRef([]);
 
   const {
@@ -46,7 +52,7 @@ const VoiceToText = () => {
     newSocket.on('connect', () => setIsConnected(true));
     newSocket.on('disconnect', () => setIsConnected(false));
     newSocket.on('n8n-message', handleAIResponse);
-    
+
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, []);
@@ -76,7 +82,7 @@ const VoiceToText = () => {
 
     const utterance = new SpeechSynthesisUtterance(text);
     // Try to find an English voice
-    const englishVoice = voices.current.find(voice => 
+    const englishVoice = voices.current.find(voice =>
       voice.lang.startsWith('en') && voice.name.includes('Male')
     );
     if (englishVoice) {
@@ -88,12 +94,12 @@ const VoiceToText = () => {
   };
 
   const handleAIResponse = useCallback((data) => {
-    const messageText = typeof data.message === 'string' 
-      ? data.message 
+    const messageText = typeof data.message === 'string'
+      ? data.message
       : JSON.stringify(data.message, null, 2);
 
     addMessage('ai', messageText);
-    
+
     if (mode === 'voice') {
       speak(messageText);
     }
@@ -107,7 +113,7 @@ const VoiceToText = () => {
         timestamp: new Date().toLocaleString(),
         preview: messages[0].text.slice(0, 50) + '...'
       };
-      
+
       setChatHistory(prev => {
         const updatedHistory = [newChat, ...prev];
         localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
@@ -135,18 +141,73 @@ const VoiceToText = () => {
     }
   };
 
+
+  /////////////////////////////
+  const handleFileSelect = (files) => {
+    const imageFiles = Array.from(files).filter(file =>
+      file.type.startsWith('image/')
+    );
+
+    if (imageFiles.length === 0) {
+      setError('Please select valid image files (PNG, JPG, GIF, etc.)');
+      return;
+    }
+
+    const newImages = imageFiles.map(file => ({
+      id: Date.now() + Math.random(),
+      file,
+      preview: URL.createObjectURL(file),
+      name: file.name
+    }));
+
+    setChatImages(prev => [...prev, ...newImages]);
+    setSelectedImages(prev => [...prev, ...newImages]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const removeImage = (imageId) => {
+    setSelectedImages(prev => {
+      const updated = prev.filter(img => img.id !== imageId);
+      // Clean up object URLs
+      const removed = prev.find(img => img.id === imageId);
+      if (removed) {
+        URL.revokeObjectURL(removed.preview);
+      }
+      return updated;
+    });
+  };
+  /////////////////////////////
+
+
+  ///////////////////////
   const handleSendMessage = async (text) => {
     if (!text.trim() || isProcessing) return;
 
     try {
       setIsProcessing(true);
       addMessage('user', text);
-      
+
       await axios.post(WEBHOOK_URL, { body: text }, {
         headers: { 'Content-Type': 'application/json' }
       });
 
       setInputText('');
+      setSelectedImages([]);
       if (listening) {
         SpeechRecognition.stopListening();
         resetTranscript();
@@ -157,6 +218,57 @@ const VoiceToText = () => {
       setIsProcessing(false);
     }
   };
+  /////////////////////////
+
+
+  /////////////////////////////
+  const handleSendImage = async () => {
+    if ((selectedImages.length === 0) || isProcessing) return;
+
+    try {
+      setIsProcessing(true);
+
+      const messageText = 'Image(s) sent';
+      const messageImages = selectedImages.map(img => ({
+        preview: img.preview,
+        name: img.name
+      }));
+      addMessage('user', messageText, messageImages);
+
+      let requestData;
+      let headers;
+
+      if (selectedImages.length > 0) {
+        const formData = new FormData();
+        formData.append('body', 'Image(s) attached');
+        selectedImages.forEach((image, index) => {
+          formData.append(`image_${index}`, image.file);
+        });
+        requestData = formData;
+        headers = {}; // Browser sets Content-Type for FormData
+      }
+      // else {
+      //   requestData = { body: text };
+      //   headers = { 'Content-Type': 'application/json' };
+      // }
+
+      await axios.post("http://localhost:5678/yolo", requestData, { headers });
+
+      setInputText('');
+      setSelectedImages([]);
+      if (listening) {
+        SpeechRecognition.stopListening();
+        resetTranscript();
+      }
+
+    } catch (error) {
+      console.error('Webhook Error:', error.response?.data || error.message);
+      setError('Failed to send message. Please check server.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  /////////////////////////////
 
   const handleVoiceInput = useCallback(() => {
     if (!listening) {
@@ -182,11 +294,12 @@ const VoiceToText = () => {
     }
   };
 
-  const addMessage = (sender, text) => {
+  const addMessage = (sender, text, images = []) => {
     setMessages(prev => [...prev, {
       id: Date.now(),
       sender,
       text,
+      images,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }]);
   };
@@ -197,6 +310,20 @@ const VoiceToText = () => {
     }
     setMode(mode === 'text' ? 'voice' : 'text');
   };
+
+
+  /////////////////////////////
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      selectedImages.forEach(img => {
+        URL.revokeObjectURL(img.preview);
+      });
+    };
+  }, []);
+  /////////////////////////////
+
+
 
   if (mode === 'voice') {
     return <VoiceChat onSwitchMode={switchMode} />;
@@ -211,11 +338,16 @@ const VoiceToText = () => {
   }
 
   return (
-    <div className="chat-app">
+    <div
+      className={`chat-app ${isDragging ? 'dragging' : ''}`} /////////////////////////////
+      onDragOver={handleDragOver} /////////////////////////////
+      onDragLeave={handleDragLeave} /////////////////////////////
+      onDrop={handleDrop} /////////////////////////////
+    >
       <header className="chat-header">
         <h1>AI Assistant</h1>
         <div className="header-actions">
-          <button 
+          <button
             className="mode-switch"
             onClick={switchMode}
             title="Switch to voice chat"
@@ -225,8 +357,8 @@ const VoiceToText = () => {
           <div className={`connection-status ${isConnected ? 'connected' : ''}`}>
             {isConnected ? 'Connected' : 'Disconnected'}
           </div>
-          <button 
-            className="history-button" 
+          <button
+            className="history-button"
             onClick={() => setShowHistory(true)}
             title="View chat history"
           >
@@ -237,12 +369,26 @@ const VoiceToText = () => {
 
       <main className="chat-main">
         <div className="messages">
-          {messages.map(({ id, sender, text, time }) => (
+          {messages.map(({ id, sender, text, images, time }) => (
             <div key={id} className={`message ${sender}`}>
+              {/* start Image selection */}
+              {images && images.length > 0 && (
+                <div className="message-images">
+                  {images.map((image, index) => (
+                    <div key={index} className="message-image">
+                      <img className='message-img' src={image.preview} alt={image.name} />
+                      <span className="image-name">{image.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* end Image selection */}
               <p>{text}</p>
               <time>{time}</time>
             </div>
           ))}
+
+
           {isProcessing && (
             <div className="message ai typing">
               <div className="typing-indicator">
@@ -256,7 +402,28 @@ const VoiceToText = () => {
 
         <div className="input-area">
           {error && <div className="error" onClick={() => setError(null)}>{error}</div>}
-          
+
+          {/* start Image selection */}
+          {selectedImages.length > 0 && (
+            <div className="selected-images">
+              {selectedImages.map((image) => (
+                <div key={image.id} className="selected-image">
+                  <img className='selected-img' src={image.preview} alt={image.name} />
+                  <button
+                    className="remove-image"
+                    onClick={() => removeImage(image.id)}
+                    title="Remove image"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                  <span className="image-name">{image.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* end Image selection */}
+
+
           <div className="input-container">
             <textarea
               value={inputText}
@@ -266,8 +433,42 @@ const VoiceToText = () => {
               disabled={isProcessing}
               rows={1}
             />
-            
+
             <div className="actions">
+
+              {/* start Image input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => handleFileSelect(e.target.files)}
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+              />
+              {/* end Image Input */}
+
+              {/* start Image upload */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="image-upload"
+                disabled={isProcessing}
+                title="Upload images"
+              >
+                <i className="fas fa-image" />
+              </button>
+              {/* end Image upload */}
+
+              {/* start Image send */}
+              <button
+                onClick={() => handleSendImage()}
+                className="image-send"
+                disabled={isProcessing}
+                title="Send images"
+              >
+                YOLO
+              </button>
+              {/* end Image send */}
+
               <button
                 onClick={handleVoiceInput}
                 className={`voice ${listening ? 'active' : ''}`}
@@ -299,6 +500,17 @@ const VoiceToText = () => {
         </div>
       </main>
 
+      {/* start Drag overlay */}
+      {isDragging && (
+        <div className="drag-overlay">
+          <div className="drag-content">
+            <i className="fas fa-cloud-upload-alt"></i>
+            <p>Drop images here to upload</p>
+          </div>
+        </div>
+      )}
+      {/* end Drag overlay */}
+
       {showHistory && (
         <div className="modal-overlay">
           <div className="modal history-modal">
@@ -307,8 +519,8 @@ const VoiceToText = () => {
                 <i className="fas fa-history"></i>
                 Chat History
               </h3>
-              <button 
-                onClick={() => setShowHistory(false)} 
+              <button
+                onClick={() => setShowHistory(false)}
                 className="close-button"
                 title="Close history"
               >
@@ -319,8 +531,8 @@ const VoiceToText = () => {
             <div className="chat-history-list">
               {chatHistory.length > 0 ? (
                 chatHistory.map(chat => (
-                  <div 
-                    key={chat.id} 
+                  <div
+                    key={chat.id}
                     className="history-item"
                     onClick={() => loadChatFromHistory(chat.id)}
                   >
@@ -350,8 +562,8 @@ const VoiceToText = () => {
             </div>
 
             <div className="history-footer">
-              <button 
-                onClick={() => setShowHistory(false)} 
+              <button
+                onClick={() => setShowHistory(false)}
                 className="secondary-button"
               >
                 Close
