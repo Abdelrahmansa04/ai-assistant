@@ -1,0 +1,341 @@
+{
+  "name": "Calender Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"response\": \"N\"\n}"
+      },
+      "id": "385b6fee-d13f-4c3d-af52-9c96f11e9e71",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        840,
+        420
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "=7680839532",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "54c5038a-b495-4ab3-8294-e4696c67e576",
+      "name": "Text Email1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1740,
+        200
+      ],
+      "webhookId": "da6bb30b-cd00-47ee-8383-d39dcba33ca1",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "xNeRdStPfrwqHWI7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "3f7094d8-2756-493d-8721-be7d4c83297b",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.end.dateTime }}",
+              "rightValue": "={{ $now }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "002b524a-9bf5-4909-baa3-512ab2571e14",
+      "name": "In the Inbox?1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        280,
+        240
+      ],
+      "typeVersion": 2.2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## 1. New Email Received\n\nOur workflow is triggered when a new email comes in. \n\nWe use an IF node here to only run the automation on incoming emails to the INBOX - not in the SENT folder.",
+        "height": 580,
+        "width": 560,
+        "color": 7
+      },
+      "id": "4a2c371c-d666-4a22-b3d4-804de737ae52",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Check If Email Needs a Response\n\nWe use ChatGPT to check if the email needs a reply. Anything sent with an \"unsubscribe\" button or \"manage preferences\" is ignored. Anything that comes from a company (e.g. sent from \"noreply@example.com\"), or has the format of a newsletter doesn't need a response.\n\nWe use an output parser so that we can use an IF node on the output.",
+        "height": 580,
+        "width": 740,
+        "color": 7
+      },
+      "id": "f322bdd3-4418-4887-9ecf-05c1e5a345c3",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        620,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Send Email to Telegram\n\nWe use a VoicerEmailer bot to send the email over a Telegram message to our account on Telegram.",
+        "height": 580,
+        "width": 760,
+        "color": 7
+      },
+      "id": "a278f8ce-5483-474d-9027-d6f60dfa6169",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1400,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Edit here\nAdd in your Chat ID here.",
+        "height": 120,
+        "width": 160
+      },
+      "id": "80784b7e-35b0-48cf-abd0-2c57d41025e3",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1440,
+        360
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-2402",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        700,
+        420
+      ],
+      "id": "e0fc86f1-db63-4e01-a442-e00b9b271ded",
+      "name": "Mistral1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ksRukr4GeLW45aqz",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "calendarId": {
+          "__rl": true,
+          "value": "midoteraq@gmail.com",
+          "mode": "list",
+          "cachedResultName": "midoteraq@gmail.com"
+        },
+        "triggerOn": "eventStarted",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTrigger",
+      "typeVersion": 1,
+      "position": [
+        20,
+        240
+      ],
+      "id": "db42b1c2-89a6-4bba-8d91-1fcb32df0d53",
+      "name": "Google Calendar Trigger",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "CHhlOQxENCydrrH6",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=remind the user with this event details:\ntype: {{ $('Google Calendar Trigger').item.json.kind }}\nstarts at: {{ $('Google Calendar Trigger').item.json.start.dateTime }}\nends at: {{ $('Google Calendar Trigger').item.json.end.dateTime }}\ncontent: {{ $('Google Calendar Trigger').item.json.summary }}",
+        "hasOutputParser": true
+      },
+      "id": "a983bc98-f8cc-4765-af74-b0413e4426ae",
+      "name": "Is there an event?",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        680,
+        220
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://8939-196-155-73-55.ngrok-free.app/emit",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "type",
+              "value": "\"Calender\""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        400
+      ],
+      "id": "935d3bd4-6b7c-4aad-a163-cc9b9a61cf34",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "Google Calendar Trigger": [
+      {
+        "json": {
+          "kind": "calendar#event",
+          "etag": "\"3495555943022014\"",
+          "id": "mp2sqqqvsrugm41608n5rnqnkc",
+          "status": "confirmed",
+          "htmlLink": "https://www.google.com/calendar/event?eid=bXAyc3FxcXZzcnVnbTQxNjA4bjVybnFua2MgbWlkb3RlcmFxQG0",
+          "created": "2025-05-20T21:52:51.000Z",
+          "updated": "2025-05-20T21:52:51.511Z",
+          "summary": "reminder to drink water",
+          "description": "reminder to drink water",
+          "creator": {
+            "email": "midoteraq@gmail.com",
+            "self": true
+          },
+          "organizer": {
+            "email": "midoteraq@gmail.com",
+            "self": true
+          },
+          "start": {
+            "dateTime": "2025-05-21T00:53:00+03:00",
+            "timeZone": "Africa/Cairo"
+          },
+          "end": {
+            "dateTime": "2025-05-21T00:54:00+03:00",
+            "timeZone": "Africa/Cairo"
+          },
+          "iCalUID": "mp2sqqqvsrugm41608n5rnqnkc@google.com",
+          "sequence": 0,
+          "reminders": {
+            "useDefault": true
+          },
+          "eventType": "default"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "In the Inbox?1": {
+      "main": [
+        [
+          {
+            "node": "Is there an event?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Is there an event?",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar Trigger": {
+      "main": [
+        [
+          {
+            "node": "In the Inbox?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is there an event?": {
+      "main": [
+        [
+          {
+            "node": "Text Email1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f9232552-136c-4dc6-b1a7-1bde47c9b44c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e083c7591a7409a6ccc1cc00ea7fc0fcad49e871f4890519d4a8264027dcd037"
+  },
+  "id": "DilUEmh4qCCq9BXW",
+  "tags": []
+}

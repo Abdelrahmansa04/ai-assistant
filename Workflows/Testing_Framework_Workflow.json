@@ -1,0 +1,677 @@
+{
+  "name": "Testing Framework Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.message }}",
+        "options": {
+          "systemMessage": "=You are a concise, proactive AI assistant with access to tools like email checking, HTTP requests, and Google Calendar actions.\nYou must obey the following rules at all times:\n\nNever take actions or use tools unless explicitly instructed.\n\nAlways ensure HTTP responses return a success status code.\n\nIf unsure or lacking details, ask for clarification.\n\nResponses must be short, clear, and minimal—avoid unnecessary information.\n\nYou can recall user preferences, tasks, or important data and proactively suggest next steps only if relevant.\n\nCurrent time: {{ $now }}\nCurrent date: {{ $today }}\n\nIf used a tool, say you used it.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        1080,
+        520
+      ],
+      "id": "ec05aa26-263e-443b-9c48-e177a2baf48f",
+      "name": "AI Agent2",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "midoteraq@gmail.com",
+          "mode": "list",
+          "cachedResultName": "midoteraq@gmail.com"
+        },
+        "limit": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        920,
+        740
+      ],
+      "id": "4304a3da-8a80-413e-902e-ab6b15296d85",
+      "name": "get events"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "midoteraq@gmail.com",
+          "mode": "list",
+          "cachedResultName": "midoteraq@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        740
+      ],
+      "id": "f9b1e5fd-e6d1-41c4-a1b1-ba0915e1fded",
+      "name": "create events"
+    },
+    {
+      "parameters": {
+        "model": "open-mistral-7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        680,
+        740
+      ],
+      "id": "57957e51-db2f-4b26-b1e4-7261949ee798",
+      "name": "Mistral"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.headers['postman-token'] }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        740
+      ],
+      "id": "19636a8e-6311-40e6-81a3-b8bba7c3ddbf",
+      "name": "Memory"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "limit": 5,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1160,
+        740
+      ],
+      "id": "f5640f3a-6f85-41f3-8c8d-30b055806cf9",
+      "name": "get emails",
+      "webhookId": "e2f946fe-fcf8-40f6-8fff-8d12fbcc352b"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1280,
+        740
+      ],
+      "id": "346b535b-9045-433e-baa9-3277e996ca45",
+      "name": "send email",
+      "webhookId": "e2f946fe-fcf8-40f6-8fff-8d12fbcc352b"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "midoteraq@gmail.com",
+          "mode": "list",
+          "cachedResultName": "midoteraq@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1400,
+        740
+      ],
+      "id": "7f0b8f86-2416-4f58-b9ab-5959a8c92253",
+      "name": "delete event"
+    },
+    {
+      "parameters": {
+        "toolDescription": "open google chrome\n",
+        "url": "https://trigger.macrodroid.com/8082e5e0-e97b-478f-b934-c61d04d3264e/openchrome"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        740
+      ],
+      "id": "beea8e2f-30a0-4205-8d14-c8ebd4d4ab9c",
+      "name": "google"
+    },
+    {
+      "parameters": {
+        "toolDescription": "toggle the flash on my phone, turn it on or off",
+        "url": "https://trigger.macrodroid.com/8082e5e0-e97b-478f-b934-c61d04d3264e/n8n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1640,
+        740
+      ],
+      "id": "e019912e-e19a-486d-95a8-f0825cea6c1e",
+      "name": "flash"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f17e458d-9059-42c2-8d14-57acda06fc41",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        520
+      ],
+      "id": "0a8347ad-0ec8-4955-8e4b-3050b1aadcbf",
+      "name": "Webhook",
+      "webhookId": "f17e458d-9059-42c2-8d14-57acda06fc41"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        520
+      ],
+      "id": "6eacf2b2-7657-4600-8a19-f15463846573",
+      "name": "Execution Data",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the start time from the 'Set Start Time' node's output.\n// Make sure 'Set Start Time' matches the actual name of your Set node.\n// If your workflow only has one item flowing through, .first() is safer.\nconst startTimeMs = $('Set Start Time').first().json.startTime;\n\nconst endTimeMs = Date.now(); // Current time in milliseconds\n\nconst durationMs = endTimeMs - startTimeMs;\nconst durationSeconds = durationMs / 1000;\nconst durationMinutes = durationSeconds / 60;\n\n// You can also format it as a human-readable string\nconst hours = Math.floor(durationSeconds / 3600);\nconst minutes = Math.floor((durationSeconds % 3600) / 60);\nconst seconds = (durationSeconds % 60).toFixed(2); // To 2 decimal places\nconst readableDuration = `${hours}h ${minutes}m ${seconds}s`;\n\n\n// Return these values as new items in the output of the Code node\nreturn [{\n  json: {\n    workflowDuration: {\n      milliseconds: durationMs,\n      seconds: durationSeconds,\n      minutes: durationMinutes,\n      readable: readableDuration\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        300
+      ],
+      "id": "3e238a80-2e58-4e71-8d9f-98af38932b69",
+      "name": "Calculate Workflow Duration"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "554bd884-7ae1-49c4-afcc-3c457b348332",
+              "name": "startTime",
+              "value": "={{ new Date().getTime() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        520
+      ],
+      "id": "bf3f3604-64ae-429c-958a-d959c3387927",
+      "name": "Set Start Time"
+    },
+    {
+      "parameters": {
+        "jsCode": "const toolNames = $input.first().json?.intermediateSteps[0]?.action?.messageLog[0]?.kwargs?.tool_calls?.map(item => item.name);\n\n\n\nconsole.log(toolNames);\nreturn [{\n  json: {\n    tools: toolNames\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        700
+      ],
+      "id": "58ba4157-1725-4904-b7f8-c3bb5e89e86d",
+      "name": "get tools list",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4ca4d73e-579c-4643-a2da-b075706bf7bb",
+              "leftValue": "={{ $json.tools }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2340,
+        700
+      ],
+      "id": "6947da68-0002-4fb9-b40b-020d6830e9d6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d4cf3c67-a0e6-4619-9059-131c26e63291",
+              "name": "Tools",
+              "value": "={{ $json.tools }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2560,
+        600
+      ],
+      "id": "78870269-4ce7-4f3a-b0ae-6187f7a86054",
+      "name": "Set Tools Array"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "853a4eb5-df0a-4fea-9079-bb830cb2cf82",
+              "name": "Tools",
+              "value": "\"\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2560,
+        800
+      ],
+      "id": "8305dbe8-a584-40b7-95eb-7d2fd8c38443",
+      "name": "Empty Tools Array"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18B0UrapFg4zyNddyqrwLjhu2Z6mjTdCoLKk9dnl2kU4",
+          "mode": "list",
+          "cachedResultName": "Phone_test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18B0UrapFg4zyNddyqrwLjhu2Z6mjTdCoLKk9dnl2kU4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 289740764,
+          "mode": "list",
+          "cachedResultName": "open_mistral_7b",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18B0UrapFg4zyNddyqrwLjhu2Z6mjTdCoLKk9dnl2kU4/edit#gid=289740764"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "prompt": "={{ $('Webhook').item.json.body.message }}",
+            "duration": "={{ $('Calculate Workflow Duration').first().json.workflowDuration.seconds }}",
+            "tools": "={{ $('AI Agent2').item.json?.intermediateSteps[0]?.action?.tool }}",
+            "response": "={{ $('AI Agent2').item.json.output }}"
+          },
+          "matchingColumns": [
+            "prompt"
+          ],
+          "schema": [
+            {
+              "id": "prompt",
+              "displayName": "prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tools",
+              "displayName": "tools",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration",
+              "displayName": "duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3000,
+        520
+      ],
+      "id": "0f69211b-987c-4048-adc7-160901a4e19b",
+      "name": "Add row",
+      "retryOnFail": true
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "content-type": "application/json",
+            "user-agent": "PostmanRuntime/7.44.0",
+            "accept": "*/*",
+            "cache-control": "no-cache",
+            "postman-token": "d599deba-3d91-4a66-9dbe-20cff2a1e8fe",
+            "host": "localhost:5678",
+            "accept-encoding": "gzip, deflate, br",
+            "connection": "keep-alive",
+            "content-length": "33"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": "{{prompt}}"
+          },
+          "webhookUrl": "http://localhost:5678/webhook/f17e458d-9059-42c2-8d14-57acda06fc41",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calculate Workflow Duration",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get tools list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "flash": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Start Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Data": {
+      "main": [
+        [
+          {
+            "node": "Add row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Start Time": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Workflow Duration": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get tools list": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Set Tools Array",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Empty Tools Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Tools Array": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empty Tools Array": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "68a92775-e948-4094-b6e9-c892aa435635",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "36cf70413786f71a586bf4e89f0ba266b395d510e785310ec85552004d95d993"
+  },
+  "id": "hABFe5JWSQMJIE7i",
+  "tags": []
+}

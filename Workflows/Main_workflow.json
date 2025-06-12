@@ -1,0 +1,668 @@
+{
+  "name": "Main workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.message }}",
+        "options": {
+          "systemMessage": "=You are a concise, proactive AI assistant with access to tools like email checking, HTTP requests, and Google Calendar actions.\n\nThis is the list of tools you have: Gmail Tools: get emails, send email, \nGoogle Calender Tools: get events, create event, delete event, \nPhone Actions Tools: flash(for Toggling the flash), and google(for openning browser on the phone).\n\nYou must obey the following rules at all times:\n\nAlways ensure HTTP responses return a success status code.\n\nIf unsure or lacking details, ask for clarification.\n\nResponses must be short, clear, and minimal—avoid unnecessary information.\n\nYou can recall user preferences, tasks, or important data and proactively suggest next steps only if relevant.\n\nCurrent time: {{ $now }}\nCurrent date: {{ $today }}\n\nIf used a tool, say you used it.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        632,
+        580
+      ],
+      "id": "aa52bf8b-f3d5-4b47-8d2f-511dfe9b00aa",
+      "name": "AI Agent2",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "mohamed619.888@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mohamed619.888@gmail.com"
+        },
+        "limit": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        800
+      ],
+      "id": "8dee1550-abe9-4a31-9641-b87adc272c46",
+      "name": "get events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ZoFAp71sMRlZq9KI",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "mohamed619.888@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mohamed619.888@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        600,
+        800
+      ],
+      "id": "ce7a2698-b2e8-4b08-a567-b68ab8929f1d",
+      "name": "create events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ZoFAp71sMRlZq9KI",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "devstral-small-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        240,
+        800
+      ],
+      "id": "861cd054-4104-485b-b73d-5b5996b658b8",
+      "name": "Mistral",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "dIMEUpT2SZvmgFl4",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.headers.host }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        380,
+        800
+      ],
+      "id": "1866b90e-c681-4f09-b655-81e494d7b2ff",
+      "name": "Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://trigger.macrodroid.com/8082e5e0-e97b-478f-b934-c61d04d3264e/ notification",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -340,
+        240
+      ],
+      "id": "c0839efe-4c5a-4dfb-beb9-6fa9b1ea591f",
+      "name": "Speak",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b73a6548-4105-4e9a-bb4b-19a816e9d120",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "={\"name\":\"stop_talking\"}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        140
+      ],
+      "id": "00311bdc-2a6b-42d8-a913-3e0f3927b21c",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://trigger.macrodroid.com/8082e5e0-e97b-478f-b934-c61d04d3264e/ notification",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -340,
+        40
+      ],
+      "id": "32b16e62-32d7-48c0-993e-78a1d2c162e7",
+      "name": "Speak1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "limit": 5,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        800
+      ],
+      "id": "d896e4ee-f520-41cd-8193-fed550217ea7",
+      "name": "get emails",
+      "webhookId": "e2f946fe-fcf8-40f6-8fff-8d12fbcc352b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PNlSxNJRdWM89YSs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        840,
+        800
+      ],
+      "id": "87986bee-fcd4-4ad6-a852-cd3de02ccc5e",
+      "name": "send email",
+      "webhookId": "e2f946fe-fcf8-40f6-8fff-8d12fbcc352b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PNlSxNJRdWM89YSs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "mohamed619.888@gmail.com",
+          "mode": "list",
+          "cachedResultName": "mohamed619.888@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        800
+      ],
+      "id": "ef1e430b-66ec-4a34-a4ba-54e287cb408c",
+      "name": "delete event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ZoFAp71sMRlZq9KI",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "open google chrome\n",
+        "url": "https://trigger.macrodroid.com/8082e5e0-e97b-478f-b934-c61d04d3264e/openchrome"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        800
+      ],
+      "id": "785745ca-237c-41fd-bc61-f55eaeb5719d",
+      "name": "google"
+    },
+    {
+      "parameters": {
+        "toolDescription": "toggle the flash on my phone, turn it on or off",
+        "url": "https://trigger.macrodroid.com/8082e5e0-e97b-478f-b934-c61d04d3264e/n8n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        800
+      ],
+      "id": "2a34dcf9-4e13-455c-a62a-0d3a920e2a5b",
+      "name": "flash"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f17e458d-9059-42c2-8d14-57acda06fc41",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        580
+      ],
+      "id": "147731c7-cf09-47bd-9d3b-6ecd51e8c16a",
+      "name": "Webhook",
+      "webhookId": "f17e458d-9059-42c2-8d14-57acda06fc41"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://5f2f-196-219-57-238.ngrok-free.app/emit",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "type",
+              "value": "\"Chat\""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        580
+      ],
+      "id": "ac15db70-0c98-403a-be3a-f479be2ae513",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A patient was classified through MRI scan with this brain tumor type: {{ $json.body.label }}, with a confidence of: {{ $json.body.confidence }}, give a diagnoses for this condition in a single short paragraph.",
+        "options": {
+          "systemMessage": "=You are a helpful doctor assistant who recieves a diagnoses of a tumor for a patient, through MRI scans, and you should explain in short words what is the case of this patient, and what should be done afterwards. ",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        640,
+        220
+      ],
+      "id": "79244c7c-011a-486c-a626-b1933e562506",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "mistral-small-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        600,
+        400
+      ],
+      "id": "a6be0309-c7a1-4075-8f64-43e7e13fc1aa",
+      "name": "Mistral1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "dIMEUpT2SZvmgFl4",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6f8c632e-5dfa-481d-9216-3c744f99d598",
+              "leftValue": "={{ $json.body.label }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f7631283-2e77-4d14-90ef-f8e2b16c3980",
+              "leftValue": "={{ $json.body.confidence }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        140,
+        580
+      ],
+      "id": "641c2ab3-b43c-4d19-9c85-52078ab615fb",
+      "name": "If1"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "to7a3.app.n8n.cloud",
+            "user-agent": "python-requests/2.32.3",
+            "content-length": "53",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "41.33.62.121",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "EG",
+            "cf-ray": "94e58b327533237b-MRS",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "41.33.62.121, 162.158.22.234",
+            "x-forwarded-host": "to7a3.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-15-6cb64f5ddc-khbtb",
+            "x-is-trusted": "yes",
+            "x-real-ip": "41.33.62.121"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "label": "Glioma",
+            "confidence": 0.9999784231185913
+          },
+          "webhookUrl": "https://to7a3.app.n8n.cloud/webhook/f17e458d-9059-42c2-8d14-57acda06fc41",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Speak1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Speak",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "flash": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "19204c5f-694e-4c4f-81af-6d19cb20506e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "36cf70413786f71a586bf4e89f0ba266b395d510e785310ec85552004d95d993"
+  },
+  "id": "Jw7qigKgwK9I3QCY",
+  "tags": []
+}

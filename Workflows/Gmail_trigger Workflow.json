@@ -1,0 +1,362 @@
+{
+  "name": "Gmail trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "=7680839532",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "4a3d6f60-7f92-4c0e-8fde-9df6595ec403",
+      "name": "Text Email1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        4080,
+        80
+      ],
+      "webhookId": "da6bb30b-cd00-47ee-8383-d39dcba33ca1",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "xNeRdStPfrwqHWI7",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "id": "6c89c914-187a-4ed9-98c4-f2b26c7428cf",
+      "name": "New Email Received1",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        2340,
+        160
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2D0o6055G0eIL8wb",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "3f7094d8-2756-493d-8721-be7d4c83297b",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              },
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "INBOX"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cb9ef4d8-b081-419b-9a00-24d15affca91",
+      "name": "In the Inbox?1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2560,
+        160
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "## 1. New Email Received\n\nOur workflow is triggered when a new email comes in. \n\nWe use an IF node here to only run the automation on incoming emails to the INBOX - not in the SENT folder.",
+        "height": 580,
+        "width": 560,
+        "color": 7
+      },
+      "id": "ea3eeb70-2766-4a7b-a790-17f3e0f2e70b",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2280,
+        -80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Check If Email Needs a Response\n\nWe use ChatGPT to check if the email needs a reply. Anything sent with an \"unsubscribe\" button or \"manage preferences\" is ignored. Anything that comes from a company (e.g. sent from \"noreply@example.com\"), or has the format of a newsletter doesn't need a response.\n\nWe use an output parser so that we can use an IF node on the output.",
+        "height": 580,
+        "width": 740,
+        "color": 7
+      },
+      "id": "dcfef098-d694-4472-a932-a97e430d53b9",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2900,
+        -80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=summarize the content and try to stay very short, here is the email: \n  sender: {{ $('New Email Received1').item.json.headers.from }}\n  subject: {{ $('New Email Received1').item.json.headers.subject }}\n  content: {{ $('New Email Received1').item.json.text }}",
+        "hasOutputParser": true
+      },
+      "id": "f31c7db2-492d-4da3-a325-27864e5c5297",
+      "name": "Does Email Need a Response?1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        2960,
+        140
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## 3. Send Email to Telegram\n\nWe use a VoicerEmailer bot to send the email over a Telegram message to our account on Telegram.",
+        "height": 580,
+        "width": 760,
+        "color": 7
+      },
+      "id": "769685bb-d51e-46c0-8d45-48cd669349d9",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3680,
+        -80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Edit here\nAdd in your Chat ID here.",
+        "height": 120,
+        "width": 160
+      },
+      "id": "1f0c1d36-5277-4f90-883a-f1aaf9bb6b05",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3740,
+        340
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-2402",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        2980,
+        340
+      ],
+      "id": "9bbaa8dd-107f-4934-b136-3dbfc8010316",
+      "name": "Mistral1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ksRukr4GeLW45aqz",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        4180,
+        640
+      ],
+      "id": "3b235e81-aa6b-4d9b-8f04-cc861245ab19",
+      "name": "Telegram Trigger",
+      "webhookId": "cd156d1c-5140-47ce-921c-cd6cf0c7fbce",
+      "credentials": {
+        "telegramApi": {
+          "id": "xNeRdStPfrwqHWI7",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://8939-196-155-73-55.ngrok-free.app/emit",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "type",
+              "value": "\"Gmail\""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        240
+      ],
+      "id": "631dafdb-e7f3-45f4-93a6-5f340a440b22",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "New Email Received1": [
+      {
+        "json": {
+          "id": "196ef9d3d8f0a58c",
+          "threadId": "196ef9d3d8f0a58c",
+          "labelIds": [
+            "UNREAD",
+            "SENT",
+            "INBOX"
+          ],
+          "sizeEstimate": 867,
+          "headers": {
+            "received": "Received: from 498586711441\r\n\tnamed unknown\r\n\tby gmailapi.google.com\r\n\twith HTTPREST;\r\n\tTue, 20 May 2025 14:33:01 -0700",
+            "content-type": "Content-Type: text/html; charset=utf-8",
+            "to": "To: midoteraq@gmail.com",
+            "subject": "Subject: How are you?",
+            "message-id": "Message-Id: <CAG+jzv9b3CMJ6ZYVpxV0=F87wf250uVpbaiWvyQqaSj0Wrcxbg@mail.gmail.com>",
+            "content-transfer-encoding": "Content-Transfer-Encoding: quoted-printable",
+            "date": "Date: Tue, 20 May 2025 14:33:01 -0700",
+            "mime-version": "MIME-Version: 1.0",
+            "from": "From: midoteraq@gmail.com"
+          },
+          "html": "\n\t\t\tHow are you?\n\t\t\t<br>\n\t\t\t<br>\n\t\t\t---\n\t\t\t<br>\n\t\t\t<em>This email was sent automatically with <a href=\"https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=n8n-nodes-base.gmail_e083c7591a7409a6ccc1cc00ea7fc0fcad49e871f4890519d4a8264027dcd037\" target=\"_blank\">n8n</a></em>\n\t\t\t\n",
+          "text": "How are you?\n\n---\nThis email was sent automatically with n8n\n[https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=n8n-nodes-base.gmail_e083c7591a7409a6ccc1cc00ea7fc0fcad49e871f4890519d4a8264027dcd037]",
+          "textAsHtml": "<p>How are you?</p><p>---<br/>This email was sent automatically with n8n<br/>[<a href=\"https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=n8n-nodes-base.gmail_e083c7591a7409a6ccc1cc00ea7fc0fcad49e871f4890519d4a8264027dcd037\">https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=n8n-nodes-base.gmail_e083c7591a7409a6ccc1cc00ea7fc0fcad49e871f4890519d4a8264027dcd037</a>]</p>",
+          "subject": "How are you?",
+          "date": "2025-05-20T21:33:01.000Z",
+          "to": {
+            "value": [
+              {
+                "address": "midoteraq@gmail.com",
+                "name": ""
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><a href=\"mailto:midoteraq@gmail.com\" class=\"mp_address_email\">midoteraq@gmail.com</a></span>",
+            "text": "midoteraq@gmail.com"
+          },
+          "from": {
+            "value": [
+              {
+                "address": "midoteraq@gmail.com",
+                "name": ""
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><a href=\"mailto:midoteraq@gmail.com\" class=\"mp_address_email\">midoteraq@gmail.com</a></span>",
+            "text": "midoteraq@gmail.com"
+          },
+          "messageId": "<CAG+jzv9b3CMJ6ZYVpxV0=F87wf250uVpbaiWvyQqaSj0Wrcxbg@mail.gmail.com>"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "New Email Received1": {
+      "main": [
+        [
+          {
+            "node": "In the Inbox?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "In the Inbox?1": {
+      "main": [
+        [
+          {
+            "node": "Does Email Need a Response?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does Email Need a Response?1": {
+      "main": [
+        [
+          {
+            "node": "Text Email1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Does Email Need a Response?1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Email1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "681bbb7c-e594-41da-bfa6-26995019d552",
+  "meta": {
+    "templateId": "self-building-ai-agent",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e083c7591a7409a6ccc1cc00ea7fc0fcad49e871f4890519d4a8264027dcd037"
+  },
+  "id": "ne0IMuX2TxkiGZaO",
+  "tags": []
+}
