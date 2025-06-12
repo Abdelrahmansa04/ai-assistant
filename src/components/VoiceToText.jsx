@@ -467,7 +467,7 @@ const VoiceToText = () => {
                 disabled={isProcessing}
                 title="Send images"
               >
-                YOLO
+                Diagnose
               </button>
               {/* end Image send */}
 
