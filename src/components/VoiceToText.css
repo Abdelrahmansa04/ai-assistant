@@ -71,7 +71,7 @@ body {
 .chat-app {
   max-width: 1200px;
   margin: 0 auto;
-  height: 100vh;
+  height: 95vh;
   display: flex;
   flex-direction: column;
 }
@@ -391,7 +391,7 @@ textarea:disabled {
 /* Mobile Responsive */
 @media (max-width: 640px) {
   .chat-app {
-    height: 100vh;
+    height: 95vh;
   }
 
   .messages {
@@ -486,10 +486,29 @@ textarea:disabled {
   opacity: 0.4 !important;
 }
 
+.selected-image{
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: fit-content;
+  margin: auto;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.selected-image > .remove-image{
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+
 .selected-img {
   width: 140px;
   height: 140px;
   object-fit: cover;
+  border-radius: 10px;
 }
 
 .message-img {
@@ -497,7 +516,19 @@ textarea:disabled {
   height: 140px;
   object-fit: cover;
   float: right;
+  border-radius: 10px;
 }
+
+.image-name{
+  padding: 7px;
+  color: var(--warning-light);
+}
+
+.ai > .message-text {
+  text-align: justify;
+}
+
+
 
 /* History Modal */
 .history-modal {

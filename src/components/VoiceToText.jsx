@@ -202,7 +202,7 @@ const VoiceToText = () => {
       setIsProcessing(true);
       addMessage('user', text);
 
-      await axios.post(WEBHOOK_URL, { body: text }, {
+      await axios.post(WEBHOOK_URL, { message: text }, {
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -383,7 +383,8 @@ const VoiceToText = () => {
                 </div>
               )}
               {/* end Image selection */}
-              <p>{text}</p>
+
+              <p className='message-text'>{text}</p>
               <time>{time}</time>
             </div>
           ))}
@@ -409,6 +410,8 @@ const VoiceToText = () => {
               {selectedImages.map((image) => (
                 <div key={image.id} className="selected-image">
                   <img className='selected-img' src={image.preview} alt={image.name} />
+                  
+                  <span className="image-name">{image.name}</span>
                   <button
                     className="remove-image"
                     onClick={() => removeImage(image.id)}
@@ -416,7 +419,6 @@ const VoiceToText = () => {
                   >
                     <i className="fas fa-times"></i>
                   </button>
-                  <span className="image-name">{image.name}</span>
                 </div>
               ))}
             </div>

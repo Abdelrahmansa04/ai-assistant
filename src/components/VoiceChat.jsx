@@ -4,6 +4,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import './VoiceChat.css';
 
+// const WEBHOOK_URL = 'https://to7a3.app.n8n.cloud/webhook/f17e458d-9059-42c2-8d14-57acda06fc41';
 const WEBHOOK_URL = 'https://to7a3.app.n8n.cloud/webhook/f17e458d-9059-42c2-8d14-57acda06fc41';
 const SOCKET_URL = 'http://localhost:5000';
 
@@ -73,7 +74,12 @@ const VoiceChat = ({ onSwitchMode }) => {
     utterance.rate = 1;
     utterance.pitch = 1;
 
-    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      SpeechRecognition.stopListening(); // Ensure listening stops as soon as speaking starts
+    };
+
+    
     utterance.onend = () => {
       setIsSpeaking(false);
       // Start listening again after AI finishes speaking
